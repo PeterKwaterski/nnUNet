@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 from nnunetv2.training.loss.deep_supervision import DeepSupervisionWrapper
 from nnunetv2.training.loss.picai_losses import FocalAndCrossEntropyLoss
@@ -29,3 +30,20 @@ class nnUNetTrainerPICAI_FLCE(nnUNetTrainer):
             loss = DeepSupervisionWrapper(loss, weights)
 
         return loss
+
+
+class nnUNetTrainerPICAI_FLCE_5epochs(nnUNetTrainerPICAI_FLCE):
+    """Short-run trainer for end-to-end pipeline validation."""
+
+    def __init__(
+        self,
+        plans: dict,
+        configuration: str,
+        fold: int,
+        dataset_json: dict,
+        device: torch.device = torch.device("cuda"),
+    ):
+        super().__init__(plans, configuration, fold, dataset_json, device)
+        self.num_epochs = 5
+        self.num_iterations_per_epoch = 2
+        self.num_val_iterations_per_epoch = 1
