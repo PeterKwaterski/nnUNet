@@ -68,5 +68,16 @@ class FocalAndCrossEntropyLoss(nn.Module):
 
     def forward(self, logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         focal = self.focal(logits, target)
-        cross_entropy = self.cross_entropy(logits, target)
+
+        target_for_mask = target
+        if target_for_mask.ndim == logits.ndim:
+            if target_for_mask.shape[1] != 1:
+                raise ValueError("target must have one label channel")
+            target_for_mask = target_for_mask[:, 0]
+        valid = target_for_mask != self.cross_entropy.ignore_index
+        if not torch.any(valid):
+            cross_entropy = logits.sum() * 0
+        else:
+            cross_entropy = self.cross_entropy(logits, target)
+
         return self.focal_weight * focal + (1 - self.focal_weight) * cross_entropy
